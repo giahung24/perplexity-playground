@@ -45,11 +45,11 @@ function SearchPage() {
     <div className="w-full max-w-6xl mx-auto space-y-6">
       {/* Title */}
       <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-white mb-4">Search</h1>
+        <h1 className="text-4xl font-bold text-foreground mb-4">Search</h1>
       </div>
       
       {/* Search Form */}
-      <Card className="bg-background/60 backdrop-blur-md border-divider">
+      <Card className="shadow-md">
         <CardBody>
           <form onSubmit={handleSearch} className="flex gap-4">
             <Input
@@ -89,14 +89,14 @@ function SearchPage() {
         <div className="flex justify-center items-center py-12">
           <div className="flex flex-col items-center gap-4">
             <Spinner size="lg" color="primary" />
-            <p className="text-white text-lg">Searching for results...</p>
+            <p className="text-foreground text-lg">Searching for results...</p>
           </div>
         </div>
       )}
 
       {/* Search Results */}
       {results && !loading && (
-        <Card className="bg-background/60 backdrop-blur-md border-divider">
+        <Card className="shadow-md">
           <CardHeader>
             <h2 className="text-xl font-semibold">Search Results for: "{results.query}"</h2>
           </CardHeader>
@@ -104,7 +104,7 @@ function SearchPage() {
             {results.results && results.results.length > 0 ? (
               <div className="space-y-4">
                 {results.results.map((result, index) => (
-                  <Card key={index} className="bg-background/40 border-divider">
+                  <Card key={index} className="shadow-sm">
                     <CardBody className="gap-3">
                       <h3 className="text-lg font-semibold text-primary">
                         {result.title}

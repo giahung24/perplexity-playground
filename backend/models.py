@@ -44,6 +44,7 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     response: str = Field(..., description="AI-generated response")
     sources: Optional[List[str]] = Field([], description="List of source URLs or citations")
+    parsed_citations: Optional[List[Dict]] = Field([], description="Parsed citation references from content")
 
 
 class HealthResponse(BaseModel):

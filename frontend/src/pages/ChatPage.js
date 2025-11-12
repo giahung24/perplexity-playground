@@ -27,6 +27,60 @@ function ChatPage() {
   const [availableModels, setAvailableModels] = useState([]);
   const messagesEndRef = useRef(null);
 
+  const hasCitations = (content) => {
+    if (!content) return false;
+    // Check if content contains citation patterns like [1], [2], etc.
+    const citationPattern = /\[\d+\]/;
+    return citationPattern.test(content);
+  };
+
+  const renderContentWithCitations = (content, sources = [], parsedCitations = []) => {
+    if (!content) return null;
+    
+    // If we don't have sources or parsed citations, just render normally
+    if (!sources || sources.length === 0 || !parsedCitations || parsedCitations.length === 0) {
+      return <ReactMarkdown>{content}</ReactMarkdown>;
+    }
+    
+    // Pre-process content to replace citation patterns with markdown links
+    let processedContent = content;
+    
+    parsedCitations.forEach((citation) => {
+      const sourceUrl = sources[citation.index - 1];
+      if (sourceUrl) {
+        const citationPattern = new RegExp(`\\[${citation.index}\\]`, 'g');
+        // Replace with markdown link syntax that ReactMarkdown can handle
+        processedContent = processedContent.replace(citationPattern, `[[${citation.index}]](${sourceUrl})`);
+      }
+    });
+    
+    // Custom components for ReactMarkdown
+    const components = {
+      a: ({ href, children, ...props }) => {
+        // Check if this is a citation link
+        const isCitation = children && children.toString().match(/^\[\d+\]$/);
+        
+        return (
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={isCitation ? "citation-link" : ""}
+            {...props}
+          >
+            {children}
+          </a>
+        );
+      }
+    };
+    
+    return (
+      <div className="citation-content">
+        <ReactMarkdown components={components}>{processedContent}</ReactMarkdown>
+      </div>
+    );
+  };
+
   const parseContentWithThinking = (content) => {
     if (!content || typeof content !== 'string') return { thinking: [], content: '' };
     
@@ -96,6 +150,7 @@ function ChatPage() {
         role: 'assistant',
         content: '',
         sources: [],
+        parsedCitations: [],
         model: selectedModel,
         streaming: true
       }];
@@ -140,6 +195,19 @@ function ChatPage() {
                 });
               }
 
+              if (parsed.citations || parsed.parsed_citations) {
+                // eslint-disable-next-line no-loop-func
+                setMessages(prev => {
+                  const updated = [...prev];
+                  updated[assistantMessageIndex] = {
+                    ...updated[assistantMessageIndex],
+                    sources: parsed.citations || [],
+                    parsedCitations: parsed.parsed_citations || []
+                  };
+                  return updated;
+                });
+              }
+
               if (parsed.done) {
                 // eslint-disable-next-line no-loop-func
                 setMessages(prev => {
@@ -171,10 +239,10 @@ function ChatPage() {
   return (
     <div className="w-full max-w-6xl mx-auto h-[calc(100vh-140px)] flex flex-col">
       <div className="text-center mb-6">
-        <h1 className="text-4xl font-bold text-white mb-4">RAG Chat</h1>
+        <h1 className="text-4xl font-bold text-foreground mb-4">RAG Chat</h1>
       </div>
       
-      <Card className="flex-1 bg-background/60 backdrop-blur-md border-divider flex flex-col h-full">
+      <Card className="flex-1 shadow-md flex flex-col h-full">
         <CardBody className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.map((message, index) => {
             const { thinking, content } = parseContentWithThinking(message.content);
@@ -183,7 +251,7 @@ function ChatPage() {
               <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[70%] ${message.role === 'user' 
                   ? 'bg-primary text-primary-foreground' 
-                  : 'bg-content2'
+                  : 'bg-default-100'
                 } rounded-2xl p-4 space-y-3`}>
                   
                   {message.model && message.role === 'assistant' && (
@@ -193,47 +261,30 @@ function ChatPage() {
                   )}
                   
                   {thinking.length > 0 && message.role === 'assistant' && thinking.map((thinkText, thinkIndex) => (
-                    <details key={`think-${thinkIndex}`} className="bg-content3/50 rounded-lg border border-divider">
-                      <summary className="cursor-pointer p-3 text-sm text-foreground-500 hover:bg-content3/70 rounded-lg select-none">
+                    <details key={`think-${thinkIndex}`} className="bg-default-50 rounded-lg border border-divider">
+                      <summary className="cursor-pointer p-3 text-sm text-default-500 hover:bg-default-100 rounded-lg select-none">
                         💭 Thinking process
                       </summary>
-                      <div className="p-3 border-t border-divider text-xs text-foreground-400 leading-relaxed italic">
+                      <div className="p-3 border-t border-divider text-xs text-default-400 leading-relaxed italic">
                         <ReactMarkdown>{thinkText}</ReactMarkdown>
                       </div>
                     </details>
                   ))}
                   
                   <div className="prose prose-sm dark:prose-invert max-w-none">
-                    <ReactMarkdown>{content}</ReactMarkdown>
+                    {message.role === 'assistant' ? 
+                      renderContentWithCitations(content, message.sources, message.parsedCitations) :
+                      <ReactMarkdown>{content}</ReactMarkdown>
+                    }
                   </div>
                   
                   {message.streaming && (
-                    <div className="flex items-center gap-2 text-xs text-foreground-500 mt-2">
+                    <div className="flex items-center gap-2 text-xs text-default-500 mt-2">
                       <span>Streaming</span>
                       <div className="flex gap-1">
                         <div className="w-1 h-1 bg-current rounded-full animate-pulse"></div>
                         <div className="w-1 h-1 bg-current rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
                         <div className="w-1 h-1 bg-current rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {message.sources && message.sources.length > 0 && (
-                    <div className="mt-3 pt-3 border-t border-divider">
-                      <p className="text-sm font-medium mb-2 text-foreground-600">Sources:</p>
-                      <div className="space-y-1">
-                        {message.sources.map((source, sourceIndex) => (
-                          <Link 
-                            key={sourceIndex} 
-                            href={source} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-xs block"
-                            showAnchorIcon
-                          >
-                            {source}
-                          </Link>
-                        ))}
                       </div>
                     </div>
                   )}

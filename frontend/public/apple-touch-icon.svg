@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="96" cy="96" r="90" fill="url(#grad)" stroke="#1e40af" stroke-width="6"/>
+  
+  <!-- Search/RAG icon - representing search and AI -->
+  <!-- Magnifying glass -->
+  <circle cx="72" cy="72" r="30" fill="none" stroke="white" stroke-width="8"/>
+  <line x1="94" y1="94" x2="120" y2="120" stroke="white" stroke-width="8" stroke-linecap="round"/>
+  
+  <!-- AI/Brain dots -->
+  <circle cx="132" cy="60" r="6" fill="white"/>
+  <circle cx="150" cy="78" r="6" fill="white"/>
+  <circle cx="138" cy="96" r="6" fill="white"/>
+  <circle cx="126" cy="114" r="6" fill="white"/>
+  <circle cx="144" cy="132" r="6" fill="white"/>
+  
+  <!-- Text "RAG" -->
+  <text x="96" y="160" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="white">RAG</text>
+</svg>

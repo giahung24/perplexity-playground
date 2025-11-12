@@ -107,7 +107,20 @@ class PerplexityService:
             if hasattr(completion, "citations") and completion.citations:
                 sources = completion.citations
 
-            return ChatResponse(response=content, sources=sources)
+            # Also extract citations from content structure
+            parsed_citations = self._extract_citations_from_content(content)
+            
+            # Enhance sources with parsed citation data
+            if parsed_citations:
+                # If we have parsed citations but no API citations, create placeholder URLs
+                if not sources:
+                    sources = [f"Citation {c['index']}" for c in parsed_citations]
+
+            return ChatResponse(
+                response=content, 
+                sources=sources, 
+                parsed_citations=parsed_citations if parsed_citations else []
+            )
 
         except Exception as e:
             logger.error(f"Error calling Perplexity Chat API: {str(e)}")
@@ -249,11 +262,29 @@ class PerplexityService:
             # Start streaming
             stream = client.chat.completions.create(**completion_params)
 
+            accumulated_content = ""
+            citations = []
+
             for chunk in stream:
                 if chunk.choices[0].delta.content:
                     content = chunk.choices[0].delta.content
+                    accumulated_content += content
                     # Send content as Server-Sent Events
                     yield f"data: {json.dumps({'content': content})}\n\n"
+
+                # Check for citations at the end of stream
+                if hasattr(chunk, 'citations') and chunk.citations:
+                    citations.extend(chunk.citations)
+
+            # At the end of streaming, send citations if available
+            # Also parse citations from the accumulated content
+            parsed_citations = self._extract_citations_from_content(accumulated_content)
+            
+            # Combine any citations from the API response with parsed citations
+            all_citations = list(set(citations + [c['url'] for c in parsed_citations if 'url' in c]))
+
+            if all_citations or parsed_citations:
+                yield f"data: {json.dumps({'citations': all_citations, 'parsed_citations': parsed_citations})}\n\n"
 
             # Send completion signal
             yield f"data: {json.dumps({'done': True})}\n\n"
@@ -261,6 +292,38 @@ class PerplexityService:
         except Exception as e:
             logger.error(f"Error in streaming chat: {str(e)}")
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
+
+    def _extract_citations_from_content(self, content: str) -> List[dict]:
+        """
+        Extract citation references from content and return structured citation data
+        
+        Args:
+            content: The response content containing citation references like [1], [2], etc.
+            
+        Returns:
+            List of citation dictionaries with index and reference info
+        """
+        import re
+        
+        # Find all citation patterns like [1], [2], [3][4], etc.
+        citation_pattern = r'\[(\d+)\]'
+        matches = re.finditer(citation_pattern, content)
+        
+        citations = []
+        for match in matches:
+            citation_num = int(match.group(1))
+            citations.append({
+                'index': citation_num,
+                'position': match.span(),
+                'text': match.group(0)
+            })
+        
+        # Remove duplicates and sort by index
+        unique_citations = {}
+        for citation in citations:
+            unique_citations[citation['index']] = citation
+        
+        return list(unique_citations.values())
 
 
 def build_allowed_origins() -> List[str]:

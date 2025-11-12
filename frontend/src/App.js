@@ -1,16 +1,24 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import { 
-  Navbar, 
-  NavbarBrand, 
-  NavbarContent, 
-  NavbarItem, 
+import {
+  Navbar,
+  NavbarBrand,
+  NavbarContent,
+  NavbarItem,
   Button,
-  Switch
+  Switch,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+  Avatar
 } from '@nextui-org/react';
-import { ThemeProvider, useTheme } from './components/ThemeProvider';
 import SearchPage from './pages/SearchPage';
 import ChatPage from './pages/ChatPage';
+import ProtectedRoute from './components/ProtectedRoute';
+import { ThemeProvider, useTheme } from './components/ThemeProvider';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import './App.css';
 
 const ThemeToggle = () => {
   const { theme, toggleTheme } = useTheme();
@@ -31,6 +39,7 @@ const ThemeToggle = () => {
 
 const Navigation = () => {
   const location = useLocation();
+  const { logout } = useAuth();
   
   const isActive = (path) => location.pathname === path;
   
@@ -67,20 +76,53 @@ const Navigation = () => {
         <NavbarItem>
           <ThemeToggle />
         </NavbarItem>
+        <NavbarItem>
+          <Dropdown>
+            <DropdownTrigger>
+              <Avatar
+                isBordered
+                as="button"
+                className="transition-transform"
+                size="sm"
+                showFallback
+                fallback={<span className="text-sm">👤</span>}
+              />
+            </DropdownTrigger>
+            <DropdownMenu aria-label="Profile Actions" variant="flat">
+              <DropdownItem key="logout" color="danger" onClick={logout}>
+                Logout
+              </DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
+        </NavbarItem>
       </NavbarContent>
     </Navbar>
   );
 };
 
 const AppContent = () => {
+  const { isAuthenticated } = useAuth();
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500">
-      <Navigation />
-      <main className="container mx-auto px-6 py-8 max-w-6xl">
+    <div className="min-h-screen bg-background">
+      {isAuthenticated && <Navigation />}
+      <main className={`container mx-auto px-6 ${isAuthenticated ? 'py-8' : 'py-0'} max-w-6xl`}>
         <Routes>
-          <Route path="/" element={<SearchPage />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="/chat" element={<ChatPage />} />
+          <Route path="/" element={
+            <ProtectedRoute>
+              <SearchPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/search" element={
+            <ProtectedRoute>
+              <SearchPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/chat" element={
+            <ProtectedRoute>
+              <ChatPage />
+            </ProtectedRoute>
+          } />
         </Routes>
       </main>
     </div>
@@ -89,11 +131,13 @@ const AppContent = () => {
 
 function App() {
   return (
-    <ThemeProvider>
-      <Router>
-        <AppContent />
-      </Router>
-    </ThemeProvider>
+    <AuthProvider>
+      <ThemeProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
 

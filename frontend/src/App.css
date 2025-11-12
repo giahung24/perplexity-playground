@@ -19,3 +19,36 @@ code {
 input, textarea, button {
   font-family: inherit;
 }
+
+/* Citation link styles */
+.citation-content .citation-link {
+  color: #3b82f6;
+  font-weight: 500;
+  text-decoration: none;
+  border-radius: 2px;
+  padding: 1px 3px;
+  margin: 0 1px;
+  background-color: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  transition: all 0.2s ease;
+}
+
+.citation-content .citation-link:hover {
+  color: #2563eb;
+  background-color: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.4);
+  text-decoration: none;
+}
+
+/* Dark mode citation styles */
+.dark .citation-content .citation-link {
+  background-color: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #60a5fa;
+}
+
+.dark .citation-content .citation-link:hover {
+  background-color: rgba(59, 130, 246, 0.3);
+  border-color: rgba(59, 130, 246, 0.5);
+  color: #93c5fd;
+}
