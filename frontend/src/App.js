@@ -111,7 +111,21 @@ const Navigation = () => {
               />
             </DropdownTrigger>
             <DropdownMenu aria-label="Profile Actions" variant="flat">
-              <DropdownItem key="logout" color="danger" onClick={logout}>
+              <DropdownItem 
+                key="github" 
+                startContent="🔗"
+                onClick={() => window.open('https://github.com/giahung24/perplexity-playground', '_blank')}
+              >
+                GitHub Page
+              </DropdownItem>
+              <DropdownItem 
+                key="models" 
+                startContent="📖"
+                onClick={() => window.open('https://docs.perplexity.ai/getting-started/models', '_blank')}
+              >
+                Models Help
+              </DropdownItem>
+              <DropdownItem key="logout" color="danger" startContent="🚪" onClick={logout}>
                 Logout
               </DropdownItem>
             </DropdownMenu>
