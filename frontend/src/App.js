@@ -1,88 +1,99 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
-import styled from 'styled-components';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { 
+  Navbar, 
+  NavbarBrand, 
+  NavbarContent, 
+  NavbarItem, 
+  Button,
+  Switch
+} from '@nextui-org/react';
+import { ThemeProvider, useTheme } from './components/ThemeProvider';
 import SearchPage from './pages/SearchPage';
 import ChatPage from './pages/ChatPage';
-import './App.css';
 
-const AppContainer = styled.div`
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-`;
-
-const NavBar = styled.nav`
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  padding: 1rem 2rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-`;
-
-const NavContainer = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`;
-
-const Logo = styled.h1`
-  color: white;
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: bold;
-`;
-
-const NavLinks = styled.div`
-  display: flex;
-  gap: 2rem;
-`;
-
-const StyledNavLink = styled(NavLink)`
-  color: white;
-  text-decoration: none;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  transition: all 0.3s ease;
+const ThemeToggle = () => {
+  const { theme, toggleTheme } = useTheme();
   
-  &:hover {
-    background: rgba(255, 255, 255, 0.1);
-  }
-  
-  &.active {
-    background: rgba(255, 255, 255, 0.2);
-    font-weight: bold;
-  }
-`;
+  return (
+    <Switch
+      defaultSelected={theme === 'dark'}
+      size="lg"
+      color="secondary"
+      startContent={<span>🌙</span>}
+      endContent={<span>☀️</span>}
+      onChange={toggleTheme}
+    >
+      Dark mode
+    </Switch>
+  );
+};
 
-const MainContent = styled.main`
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
-`;
+const Navigation = () => {
+  const location = useLocation();
+  
+  const isActive = (path) => location.pathname === path;
+  
+  return (
+    <Navbar isBordered className="bg-background/60 backdrop-blur-md">
+      <NavbarBrand>
+        <p className="font-bold text-xl text-primary">RAG Application</p>
+      </NavbarBrand>
+      
+      <NavbarContent className="hidden sm:flex gap-4" justify="center">
+        <NavbarItem>
+          <Button
+            as="a"
+            href="/search"
+            variant={isActive('/search') || isActive('/') ? 'solid' : 'light'}
+            color="primary"
+          >
+            Search
+          </Button>
+        </NavbarItem>
+        <NavbarItem>
+          <Button
+            as="a"
+            href="/chat"
+            variant={isActive('/chat') ? 'solid' : 'light'}
+            color="primary"
+          >
+            Chat
+          </Button>
+        </NavbarItem>
+      </NavbarContent>
+      
+      <NavbarContent justify="end">
+        <NavbarItem>
+          <ThemeToggle />
+        </NavbarItem>
+      </NavbarContent>
+    </Navbar>
+  );
+};
+
+const AppContent = () => {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500">
+      <Navigation />
+      <main className="container mx-auto px-6 py-8 max-w-6xl">
+        <Routes>
+          <Route path="/" element={<SearchPage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/chat" element={<ChatPage />} />
+        </Routes>
+      </main>
+    </div>
+  );
+};
 
 function App() {
   return (
-    <AppContainer>
+    <ThemeProvider>
       <Router>
-        <NavBar>
-          <NavContainer>
-            <Logo>RAG Application</Logo>
-            <NavLinks>
-              <StyledNavLink to="/search">Search</StyledNavLink>
-              <StyledNavLink to="/chat">Chat</StyledNavLink>
-            </NavLinks>
-          </NavContainer>
-        </NavBar>
-        
-        <MainContent>
-          <Routes>
-            <Route path="/" element={<SearchPage />} />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/chat" element={<ChatPage />} />
-          </Routes>
-        </MainContent>
+        <AppContent />
       </Router>
-    </AppContainer>
+    </ThemeProvider>
   );
 }
 

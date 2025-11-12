@@ -1,127 +1,28 @@
 import React, { useState } from 'react';
-import styled from 'styled-components';
+import {
+  Card,
+  CardBody,
+  CardHeader,
+  Input,
+  Button,
+  Spinner,
+  Link,
+  Divider
+} from '@nextui-org/react';
 import { searchService } from '../services/api';
-
-const PageContainer = styled.div`
-  color: white;
-`;
-
-const Title = styled.h2`
-  text-align: center;
-  margin-bottom: 2rem;
-  font-size: 2.5rem;
-`;
-
-const SearchContainer = styled.div`
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-radius: 16px;
-  padding: 2rem;
-  margin-bottom: 2rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-`;
-
-const SearchForm = styled.form`
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
-`;
-
-const SearchInput = styled.input`
-  flex: 1;
-  padding: 1rem;
-  border: none;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.9);
-  font-size: 1rem;
-  outline: none;
-  
-  &:focus {
-    background: white;
-    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
-  }
-`;
-
-const SearchButton = styled.button`
-  padding: 1rem 2rem;
-  background: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background 0.3s ease;
-  
-  &:hover:not(:disabled) {
-    background: #45a049;
-  }
-  
-  &:disabled {
-    background: #cccccc;
-    cursor: not-allowed;
-  }
-`;
-
-const ResultsContainer = styled.div`
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-radius: 16px;
-  padding: 2rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-`;
-
-const ResultItem = styled.div`
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-`;
-
-const ResultTitle = styled.h3`
-  margin: 0 0 0.5rem 0;
-  color: #FFD700;
-`;
-
-const ResultURL = styled.a`
-  color: #87CEEB;
-  text-decoration: none;
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
-  display: block;
-  
-  &:hover {
-    text-decoration: underline;
-  }
-`;
-
-const ResultSnippet = styled.p`
-  margin: 0.5rem 0 0 0;
-  line-height: 1.6;
-`;
-
-const LoadingSpinner = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 2rem;
-  font-size: 1.1rem;
-`;
-
-const ErrorMessage = styled.div`
-  background: rgba(255, 0, 0, 0.1);
-  border: 1px solid rgba(255, 0, 0, 0.3);
-  color: #ff6b6b;
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-`;
 
 function SearchPage() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const trimSnippet = (text, maxWords = 50) => {
+    if (!text) return '';
+    const words = text.split(' ');
+    if (words.length <= maxWords) return text;
+    return words.slice(0, maxWords).join(' ') + '...';
+  };
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -141,57 +42,99 @@ function SearchPage() {
   };
 
   return (
-    <PageContainer>
-      <Title>Search</Title>
+    <div className="w-full max-w-6xl mx-auto space-y-6">
+      {/* Title */}
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-bold text-white mb-4">Search</h1>
+      </div>
       
-      <SearchContainer>
-        <SearchForm onSubmit={handleSearch}>
-          <SearchInput
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Enter your search query..."
-            disabled={loading}
-          />
-          <SearchButton type="submit" disabled={loading || !query.trim()}>
-            {loading ? 'Searching...' : 'Search'}
-          </SearchButton>
-        </SearchForm>
-      </SearchContainer>
+      {/* Search Form */}
+      <Card className="bg-background/60 backdrop-blur-md border-divider">
+        <CardBody>
+          <form onSubmit={handleSearch} className="flex gap-4">
+            <Input
+              type="text"
+              placeholder="Enter your search query..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              disabled={loading}
+              variant="bordered"
+              size="lg"
+              className="flex-1"
+            />
+            <Button
+              type="submit"
+              disabled={loading || !query.trim()}
+              color="primary"
+              size="lg"
+              className="px-8"
+            >
+              {loading ? <Spinner size="sm" color="white" /> : 'Search'}
+            </Button>
+          </form>
+        </CardBody>
+      </Card>
 
+      {/* Error Message */}
       {error && (
-        <ErrorMessage>
-          {error}
-        </ErrorMessage>
+        <Card className="bg-danger-50 border-danger-200">
+          <CardBody>
+            <p className="text-danger-600">Error: {error}</p>
+          </CardBody>
+        </Card>
       )}
 
+      {/* Loading Spinner */}
       {loading && (
-        <LoadingSpinner>
-          Searching for results...
-        </LoadingSpinner>
+        <div className="flex justify-center items-center py-12">
+          <div className="flex flex-col items-center gap-4">
+            <Spinner size="lg" color="primary" />
+            <p className="text-white text-lg">Searching for results...</p>
+          </div>
+        </div>
       )}
 
+      {/* Search Results */}
       {results && !loading && (
-        <ResultsContainer>
-          <h3>Search Results for: "{results.query}"</h3>
-          {results.results && results.results.length > 0 ? (
-            results.results.map((result, index) => (
-              <ResultItem key={index}>
-                <ResultTitle>{result.title}</ResultTitle>
-                {result.url && (
-                  <ResultURL href={result.url} target="_blank" rel="noopener noreferrer">
-                    {result.url}
-                  </ResultURL>
-                )}
-                <ResultSnippet>{result.snippet}</ResultSnippet>
-              </ResultItem>
-            ))
-          ) : (
-            <p>No results found.</p>
-          )}
-        </ResultsContainer>
+        <Card className="bg-background/60 backdrop-blur-md border-divider">
+          <CardHeader>
+            <h2 className="text-xl font-semibold">Search Results for: "{results.query}"</h2>
+          </CardHeader>
+          <CardBody>
+            {results.results && results.results.length > 0 ? (
+              <div className="space-y-4">
+                {results.results.map((result, index) => (
+                  <Card key={index} className="bg-background/40 border-divider">
+                    <CardBody className="gap-3">
+                      <h3 className="text-lg font-semibold text-primary">
+                        {result.title}
+                      </h3>
+                      {result.url && (
+                        <Link
+                          href={result.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-secondary"
+                          showAnchorIcon
+                        >
+                          {result.url}
+                        </Link>
+                      )}
+                      <Divider />
+                      <p className="text-sm leading-relaxed text-foreground-700">
+                        {trimSnippet(result.snippet)}
+                      </p>
+                    </CardBody>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center py-8 text-foreground-500">No results found.</p>
+            )}
+          </CardBody>
+        </Card>
       )}
-    </PageContainer>
+    </div>
   );
 }
 

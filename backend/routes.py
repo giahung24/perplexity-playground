@@ -1,10 +1,12 @@
 """
 API routes for the RAG Application
 """
+import json
 import logging
 from datetime import datetime
 from fastapi import APIRouter, HTTPException
-from typing import Dict, Any
+from fastapi.responses import StreamingResponse
+from typing import Dict, Any, Generator
 
 from models import (
     SearchQuery, SearchResponse, ChatRequest, ChatResponse,
@@ -75,8 +77,8 @@ async def search_endpoint(search_query: SearchQuery) -> SearchResponse:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/api/chat", response_model=ChatResponse, tags=["Chat"])
-async def chat_endpoint(chat_request: ChatRequest) -> ChatResponse:
+@router.post("/api/chat", tags=["Chat"])
+async def chat_endpoint(chat_request: ChatRequest):
     """
     Chat endpoint using Perplexity Chat API
     
@@ -90,15 +92,31 @@ async def chat_endpoint(chat_request: ChatRequest) -> ChatResponse:
     - **web_search_options**: Additional web search configuration (optional)
     """
     try:
-        response = perplexity_service.chat(
-            messages=chat_request.messages,
-            query=chat_request.query,
-            model=chat_request.model,
-            stream=chat_request.stream,
-            web_search_options=chat_request.web_search_options
-        )
-        
-        return response
+        if chat_request.stream:
+            # Return streaming response
+            return StreamingResponse(
+                perplexity_service.chat_stream(
+                    messages=chat_request.messages,
+                    query=chat_request.query,
+                    model=chat_request.model,
+                    web_search_options=chat_request.web_search_options
+                ),
+                media_type="text/event-stream",
+                headers={
+                    "Cache-Control": "no-cache",
+                    "Connection": "keep-alive",
+                    "Content-Type": "text/event-stream",
+                }
+            )
+        else:
+            # Return regular response
+            response = perplexity_service.chat(
+                messages=chat_request.messages,
+                query=chat_request.query,
+                model=chat_request.model,
+                web_search_options=chat_request.web_search_options
+            )
+            return response
     except HTTPException:
         raise
     except Exception as e:
