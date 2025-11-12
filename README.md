@@ -13,40 +13,6 @@ A modern, production-ready RAG (Retrieval Augmented Generation) application buil
 - 🌐 **CORS Configured**: Cross-origin support for seamless frontend integration
 - 🔒 **Production Ready**: Modular architecture with proper error handling
 
-## 🏗️ Project Architecture
-
-```
-rag_app/
-├── backend/                 # FastAPI Application
-│   ├── main.py             # FastAPI app configuration & startup
-│   ├── models.py           # Pydantic data models & validation
-│   ├── controllers.py      # Business logic & service classes
-│   ├── routes.py           # API route definitions
-│   ├── requirements.txt    # Python dependencies
-│   ├── Dockerfile          # Backend container config
-│   └── .dockerignore       # Docker ignore patterns
-├── frontend/               # React.js Application
-│   ├── src/
-│   │   ├── components/     # Reusable React components
-│   │   ├── pages/          # Page-level components
-│   │   │   ├── SearchPage.js
-│   │   │   └── ChatPage.js
-│   │   ├── services/       # API service layer
-│   │   │   └── api.js
-│   │   ├── App.js          # Main App component
-│   │   └── index.js        # React entry point
-│   ├── public/             # Static assets
-│   │   ├── index.html
-│   │   ├── manifest.json
-│   │   └── robots.txt
-│   ├── package.json        # Node.js dependencies
-│   ├── Dockerfile          # Frontend container config
-│   └── .dockerignore       # Docker ignore patterns
-├── docker-compose.yml      # Multi-container orchestration
-├── .env                    # Environment configuration
-└── README.md              # Project documentation
-```
-
 ## 🛠️ Technology Stack
 
 ### Backend Architecture
@@ -95,11 +61,11 @@ Update `.env` with your configuration:
 PERPLEXITY_API_KEY=pplx-your_api_key_here
 
 # Port Configuration  
-BACKEND_PORT=8010
-FRONTEND_PORT=3003
+BACKEND_PORT=8000
+FRONTEND_PORT=3000
 
 # Deployment Configuration
-DEPLOY_HOST=192.168.1.66  # Your server IP or localhost
+DEPLOY_HOST=192.168.1.20  # Your server IP or localhost
 ```
 
 ### 3. Launch Application
@@ -112,12 +78,12 @@ docker compose up --build -d
 ```
 
 ### 4. Access Your Application
-- 🌐 **Frontend UI**: `http://192.168.1.66:3003` (or your configured host/port)
-- 🔧 **Backend API**: `http://192.168.1.66:8010`
-- 📖 **Swagger Docs**: `http://192.168.1.66:8010/docs`
-- 📚 **ReDoc**: `http://192.168.1.66:8010/redoc`
+- 🌐 **Frontend UI**: `http://192.168.1.20:3000` (or your configured host/port)
+- 🔧 **Backend API**: `http://192.168.1.20:8000`
+- 📖 **Swagger Docs**: `http://192.168.1.20:8000/docs`
+- 📚 **ReDoc**: `http://192.168.1.20:8000/redoc`
 
-## � API Reference
+## API Reference
 
 ### Search Endpoint
 Perform intelligent web searches with configurable results:
@@ -178,57 +144,15 @@ List all supported Perplexity AI models:
 GET /api/models
 ```
 
-## 🔧 Development Guide
-
-### Backend Development
-```bash
-cd backend
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run with hot reload
-uvicorn main:app --reload --host 0.0.0.0 --port 8010
-
-# Access API docs
-open http://localhost:8010/docs
-```
-
-### Frontend Development  
-```bash
-cd frontend
-
-# Install dependencies
-npm install
-
-# Start development server
-npm start
-
-# Access application
-open http://localhost:3003
-```
-
-### Full Stack Development
-```bash
-# Start both services with hot reload
-docker compose up
-
-# View logs
-docker compose logs -f
-
-# Rebuild specific service
-docker compose build backend
-docker compose build frontend
-```
 
 ## 🌍 Environment Configuration
 
 | Variable | Description | Example | Required |
 |----------|-------------|---------|----------|
 | `PERPLEXITY_API_KEY` | Your Perplexity AI API key | `pplx-abc123...` | ✅ |
-| `BACKEND_PORT` | Backend service port | `8010` | ❌ |
-| `FRONTEND_PORT` | Frontend service port | `3003` | ❌ |
-| `DEPLOY_HOST` | Server hostname/IP | `192.168.1.66` | ❌ |
+| `BACKEND_PORT` | Backend service port | `8000` | ❌ |
+| `FRONTEND_PORT` | Frontend service port | `3000` | ❌ |
+| `DEPLOY_HOST` | Server hostname/IP | `192.168.1.20` | ❌ |
 
 ## 🤖 Perplexity AI Models
 
@@ -238,40 +162,19 @@ docker compose build frontend
 | **Sonar Pro** | `sonar-pro` | Enhanced model with advanced capabilities | Complex research, detailed analysis |
 | **Sonar Reasoning** | `sonar-reasoning` | Specialized for logical reasoning | Problem-solving, technical questions |
 
-## 🔍 Feature Deep Dive
-
-### 🔎 Intelligent Search
-- **Real-time Results**: Instant search with live result updates
-- **Source Attribution**: Direct links to original sources
-- **Snippet Previews**: Relevant content excerpts
-- **Configurable Limits**: Control result count (1-50)
-- **Error Handling**: Graceful fallbacks and user feedback
-
-### 💬 Chat Interface
-- **Context Awareness**: Maintains conversation history
-- **Multi-Model Support**: Switch between AI models seamlessly
-- **Source Citations**: Transparent source attribution
-- **Streaming Responses**: Real-time response generation
-- **Rich Formatting**: Markdown support for enhanced readability
-
-### 🐳 Docker Architecture
-- **Multi-Stage Builds**: Optimized container images
-- **Hot Reload**: Development-friendly volume mounts
-- **Environment Isolation**: Clean separation of concerns
-- **Production Ready**: Configurable for different environments
-
 ## 🚀 Production Deployment
 
 ### Environment Setup
 ```bash
-# Production environment variables
-PERPLEXITY_API_KEY=your_production_key
-BACKEND_PORT=8010
-FRONTEND_PORT=3003
-DEPLOY_HOST=your-production-domain.com
+# Environment variables
+PERPLEXITY_API_KEY=your_api_key_here
+BACKEND_PORT=8000
+FRONTEND_PORT=3000
+DEPLOY_HOST=your_deploy_host_here
+# Public domain for production
+PUBLIC_DOMAIN=your_public_domain_here
+FRONTEND_PASSWORD=your_frontend_password_here
 
-# Security considerations
-ALLOWED_ORIGINS=https://your-domain.com,https://www.your-domain.com
 ```
 
 ### Production Build
@@ -286,34 +189,6 @@ docker compose -f docker-compose.prod.yml up -d
 docker compose logs -f
 ```
 
-### Security Checklist
-- [ ] Configure proper CORS origins
-- [ ] Set up SSL/TLS certificates  
-- [ ] Secure API key storage
-- [ ] Enable production logging
-- [ ] Configure monitoring and alerts
-
-## 📊 Monitoring & Troubleshooting
-
-### Health Checks
-```bash
-# Check service status
-curl http://localhost:8010/health
-
-# View container status
-docker compose ps
-
-# Check logs
-docker compose logs backend
-docker compose logs frontend
-```
-
-### Common Issues
-- **CORS Errors**: Check `DEPLOY_HOST` and `FRONTEND_PORT` in `.env`
-- **API Key Issues**: Verify `PERPLEXITY_API_KEY` is set correctly
-- **Port Conflicts**: Ensure configured ports are available
-- **Build Failures**: Check Docker logs and rebuild containers
-
 ## 🤝 Contributing
 
 We welcome contributions! Please follow these steps:
@@ -324,27 +199,15 @@ We welcome contributions! Please follow these steps:
 4. **Push** to the branch: `git push origin feature/amazing-feature`
 5. **Submit** a pull request
 
-### Code Style
-- **Python**: Follow PEP 8 guidelines
-- **JavaScript**: Use ESLint and Prettier
-- **Documentation**: Update README for new features
-- **Testing**: Add tests for new functionality
-
 ## 📄 License
 
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
 ## 🆘 Support & Resources
 
-### Documentation
-- 📖 [API Documentation](http://localhost:8010/docs) - Interactive Swagger UI
-- 📚 [ReDoc Documentation](http://localhost:8010/redoc) - Alternative API docs
-- 🔗 [Perplexity AI Documentation](https://docs.perplexity.ai/)
-
 ### Getting Help
-- � [Report Issues](https://github.com/giahung24/perplexity-playground/issues)
+- ⚠️ [Report Issues](https://github.com/giahung24/perplexity-playground/issues)
 - 💬 [Discussions](https://github.com/giahung24/perplexity-playground/discussions)
-- 📧 Email: support@example.com
 
 ### Quick Links
 - 🌟 [Star this project](https://github.com/giahung24/perplexity-playground)
@@ -355,7 +218,7 @@ This project is licensed under the MIT License. See [LICENSE](LICENSE) for detai
 
 <div align="center">
 
-**Built with ❤️ using FastAPI, React, and Perplexity AI**
+**Vibe coding with ❤️ using GitHub Copilot 🤖**
 
 [⭐ Star](https://github.com/giahung24/perplexity-playground) • [🐛 Report Bug](https://github.com/giahung24/perplexity-playground/issues) • [✨ Request Feature](https://github.com/giahung24/perplexity-playground/issues)
 
