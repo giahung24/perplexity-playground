@@ -1,13 +1,15 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
-from typing import List, Optional, Dict
+"""
+RAG Application API - Main FastAPI application
+"""
 import os
-from dotenv import load_dotenv
 import logging
-from enum import Enum
-from perplexity import Perplexity, AsyncPerplexity
+from dotenv import load_dotenv
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.utils import get_openapi
+
+from controllers import build_allowed_origins
+from routes import router
 
 # Load environment variables
 load_dotenv()
@@ -16,220 +18,137 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="RAG Application API", version="1.0.0")
+# Create FastAPI app
+app = FastAPI(
+    title="RAG Application API",
+    description="""
+    A Retrieval Augmented Generation (RAG) application with Perplexity API integration.
+    
+    ## Features
+    
+    * **Search**: Perform web searches using Perplexity's search capabilities
+    * **Chat**: Interactive chat with RAG functionality using Perplexity models
+    * **Models**: Access to various Perplexity AI models
+    
+    ## Authentication
+    
+    This API requires a Perplexity API key to be configured on the server side.
+    """,
+    version="1.0.0",
+    terms_of_service="https://example.com/terms/",
+    contact={
+        "name": "RAG Application Support",
+        "email": "support@example.com",
+    },
+    license_info={
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT",
+    },
+    docs_url="/docs",  # Swagger UI
+    redoc_url="/redoc",  # ReDoc
+)
+
+# Build allowed origins
+ALLOWED_ORIGINS = build_allowed_origins()
 
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Frontend URL
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=[
+        "Accept",
+        "Accept-Language",
+        "Content-Language",
+        "Content-Type",
+        "Authorization",
+        "X-Requested-With",
+        "Access-Control-Request-Method",
+        "Access-Control-Request-Headers",
+    ],
+    expose_headers=["*"],
 )
 
-# Pydantic models
-class ModelType(str, Enum):
-    sonar = "sonar"
-    sonar_pro = "sonar-pro"
-    sonar_reasoning = "sonar-reasoning"
+# Include routes
+app.include_router(router)
 
-class SearchQuery(BaseModel):
-    query: str
-    max_results: Optional[int] = 10
-
-class SearchResult(BaseModel):
-    title: str
-    url: str
-    snippet: str
-
-class SearchResponse(BaseModel):
-    query: str
-    results: List[SearchResult]
-
-class ChatMessage(BaseModel):
-    role: str  # 'user', 'assistant', 'system'
-    content: str
-
-class ChatRequest(BaseModel):
-    messages: List[ChatMessage]
-    query: str
-    model: Optional[ModelType] = ModelType.sonar
-    stream: Optional[bool] = False
-    web_search_options: Optional[Dict] = None
-
-class ChatResponse(BaseModel):
-    response: str
-    sources: Optional[List[str]] = []
-
-class PerplexityService:
-    def __init__(self):
-        self.api_key = os.getenv("PERPLEXITY_API_KEY")
-        if not self.api_key:
-            raise ValueError("PERPLEXITY_API_KEY environment variable is required")
-    
-    async def search(self, query: str, max_results: int = 10) -> List[SearchResult]:
-        """
-        Perform search using AsyncPerplexity client
-        """
-        try:
-            async with AsyncPerplexity(api_key=self.api_key) as client:
-                search_result = await client.search.create(
-                    query=query,
-                    max_results=max_results
-                )
-                
-                search_results = []
-                for result in getattr(search_result, "results", []):
-                    search_results.append(SearchResult(
-                        title=getattr(result, "title", ""),
-                        url=getattr(result, "url", ""),
-                        snippet=getattr(result, "snippet", "")
-                    ))
-                
-                return search_results
-        except Exception as e:
-            logger.error(f"Error calling Perplexity Search API: {str(e)}")
-            raise HTTPException(status_code=500, detail="Search service unavailable")
-    
-    def chat(self, messages: List[ChatMessage], query: str, model: ModelType = ModelType.sonar, 
-             stream: bool = False, web_search_options: Optional[Dict] = None) -> ChatResponse:
-        """
-        Perform chat using synchronous Perplexity client
-        """
-        try:
-            client = Perplexity(api_key=self.api_key)
-            
-            # Build conversation history
-            conversation = []
-            for msg in messages:
-                conversation.append({
-                    "role": msg.role,
-                    "content": msg.content
-                })
-            
-            # Add current query
-            conversation.append({
-                "role": "user",
-                "content": query
-            })
-            
-            # Prepare completion parameters
-            completion_params = {
-                "messages": conversation,
-                "model": model.value,
-                "stream": stream
-            }
-            
-            # Add web search options if provided
-            if web_search_options:
-                completion_params["web_search_options"] = web_search_options
-            
-            if stream:
-                return self._handle_streaming_response(client, completion_params)
-            else:
-                completion = client.chat.completions.create(**completion_params)
-                content = completion.choices[0].message.content if completion.choices else ""
-                
-                # Extract sources/citations if available
-                sources = []
-                if hasattr(completion, 'citations') and completion.citations:
-                    sources = completion.citations
-                
-                return ChatResponse(
-                    response=content,
-                    sources=sources
-                )
-                
-        except Exception as e:
-            logger.error(f"Error calling Perplexity Chat API: {str(e)}")
-            raise HTTPException(status_code=500, detail="Chat service unavailable")
-    
-    def _handle_streaming_response(self, client, completion_params) -> str:
-        """
-        Handle streaming response from Perplexity
-        """
-        try:
-            stream = client.chat.completions.create(**completion_params)
-            
-            response_content = ""
-            for chunk in stream:
-                if chunk.choices[0].delta.content:
-                    content = chunk.choices[0].delta.content
-                    response_content += content
-            
-            return ChatResponse(
-                response=response_content,
-                sources=[]  # Streaming may not include citations
-            )
-        except Exception as e:
-            logger.error(f"Error handling streaming response: {str(e)}")
-            raise HTTPException(status_code=500, detail="Streaming error")
-
-# Initialize services
-perplexity_service = PerplexityService()
-
-@app.get("/")
-async def root():
-    return {"message": "RAG Application API", "status": "running"}
-
-@app.get("/health")
+# Patch health endpoint to include CORS origins
+@app.get("/health", tags=["Health"])
 async def health_check():
-    return {"status": "healthy"}
+    """Health check endpoint with CORS configuration"""
+    from routes import health_check as base_health_check
+    return await base_health_check(ALLOWED_ORIGINS)
 
-@app.post("/api/search", response_model=SearchResponse)
-async def search_endpoint(search_query: SearchQuery):
+
+def custom_openapi():
     """
-    Search endpoint using Perplexity Search API
+    Custom OpenAPI schema with additional metadata
     """
-    try:
-        results = await perplexity_service.search(
-            query=search_query.query,
-            max_results=search_query.max_results
-        )
+    if app.openapi_schema:
+        return app.openapi_schema
+    
+    openapi_schema = get_openapi(
+        title="RAG Application API",
+        version="1.0.0",
+        description="""
+        A comprehensive Retrieval Augmented Generation (RAG) application with Perplexity API integration.
         
-        return SearchResponse(
-            query=search_query.query,
-            results=results
-        )
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Unexpected error in search endpoint: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
-
-@app.post("/api/chat", response_model=ChatResponse)
-async def chat_endpoint(chat_request: ChatRequest):
-    """
-    Chat endpoint using Perplexity Chat API
-    """
-    try:
-        response = perplexity_service.chat(
-            messages=chat_request.messages,
-            query=chat_request.query,
-            model=chat_request.model,
-            stream=chat_request.stream,
-            web_search_options=chat_request.web_search_options
-        )
+        This API provides powerful search and conversational AI capabilities using Perplexity's models.
+        Perfect for building intelligent applications that require real-time web search and natural 
+        language processing.
         
-        return response
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Unexpected error in chat endpoint: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        ## Key Features
+        
+        * **🔍 Search**: Web search with Perplexity's advanced search capabilities
+        * **💬 Chat**: Conversational AI with context awareness and source citations  
+        * **🤖 Models**: Access to multiple Perplexity AI models
+        * **📚 RAG**: Retrieval Augmented Generation for enhanced responses
+        
+        ## Getting Started
+        
+        1. Ensure your Perplexity API key is configured
+        2. Use the `/api/search` endpoint for web searches
+        3. Use the `/api/chat` endpoint for conversational interactions
+        4. Check `/health` for service status
+        
+        ## Support
+        
+        For questions or issues, please contact our support team.
+        """,
+        routes=app.routes,
+    )
+    
+    # Add custom tags metadata
+    openapi_schema["tags"] = [
+        {
+            "name": "Root", 
+            "description": "Basic API information and status"
+        },
+        {
+            "name": "Health", 
+            "description": "Service health and configuration endpoints"
+        },
+        {
+            "name": "Search", 
+            "description": "Web search functionality using Perplexity API"
+        },
+        {
+            "name": "Chat", 
+            "description": "Conversational AI with RAG capabilities"
+        },
+        {
+            "name": "Models", 
+            "description": "Available Perplexity AI models information"
+        }
+    ]
+    
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
 
-@app.get("/api/models")
-async def get_available_models():
-    """
-    Get list of available Perplexity models
-    """
-    return {
-        "models": [
-            {"id": "sonar", "name": "Sonar", "description": "Standard Perplexity model"},
-            {"id": "sonar-pro", "name": "Sonar Pro", "description": "Advanced Perplexity model"},
-            {"id": "sonar-reasoning", "name": "Sonar Reasoning", "description": "Reasoning-focused Perplexity model"}
-        ]
-    }
+
+# Set custom OpenAPI schema
+app.openapi = custom_openapi
 
 if __name__ == "__main__":
     import uvicorn

@@ -5,6 +5,8 @@ services:
       - "${BACKEND_PORT:-8000}:8000"
     environment:
       - PERPLEXITY_API_KEY=${PERPLEXITY_API_KEY}
+    networks:
+      - rag_network
     volumes:
       - ./backend:/app
     working_dir: /app
@@ -19,7 +21,18 @@ services:
       - /app/node_modules
     working_dir: /app
     environment:
-      - REACT_APP_BACKEND_URL=http://localhost:${BACKEND_PORT:-8000}
+      - REACT_APP_BACKEND_URL=http://${DEPLOY_HOST}:${BACKEND_PORT:-8000}
+      - WDS_SOCKET_HOST=${DEPLOY_HOST}
+      - WDS_SOCKET_PORT=${FRONTEND_PORT:-3000}
+      - CHOKIDAR_USEPOLLING=true
     command: npm start
+    stdin_open: true
+    tty: true
+    networks:
+      - rag_network
     depends_on:
       - backend
+
+networks:
+  rag_network:
+    driver: bridge
