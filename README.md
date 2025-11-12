@@ -247,7 +247,7 @@ docker compose build frontend
 - **Configurable Limits**: Control result count (1-50)
 - **Error Handling**: Graceful fallbacks and user feedback
 
-### � RAG Chat Interface
+### 💬 Chat Interface
 - **Context Awareness**: Maintains conversation history
 - **Multi-Model Support**: Switch between AI models seamlessly
 - **Source Citations**: Transparent source attribution

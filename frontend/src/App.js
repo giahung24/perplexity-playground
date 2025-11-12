@@ -45,7 +45,12 @@ const Navigation = () => {
   const { logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) => {
+    if (path === '/chat' && (location.pathname === '/' || location.pathname === '/chat')) {
+      return true;
+    }
+    return location.pathname === path;
+  };
   
   return (
     <Navbar 
@@ -68,23 +73,23 @@ const Navigation = () => {
         <NavbarItem>
           <Button
             as="a"
-            href="/search"
-            variant={isActive('/search') || isActive('/') ? 'solid' : 'light'}
-            color="primary"
-            size="sm"
-          >
-            Search
-          </Button>
-        </NavbarItem>
-        <NavbarItem>
-          <Button
-            as="a"
             href="/chat"
             variant={isActive('/chat') ? 'solid' : 'light'}
             color="primary"
             size="sm"
           >
             Chat
+          </Button>
+        </NavbarItem>
+        <NavbarItem>
+          <Button
+            as="a"
+            href="/search"
+            variant={isActive('/search') ? 'solid' : 'light'}
+            color="primary"
+            size="sm"
+          >
+            Search
           </Button>
         </NavbarItem>
       </NavbarContent>
@@ -118,19 +123,6 @@ const Navigation = () => {
         <NavbarMenuItem>
           <Button
             as="a"
-            href="/search"
-            variant={isActive('/search') || isActive('/') ? 'solid' : 'light'}
-            color="primary"
-            className="w-full justify-start"
-            size="lg"
-            onPress={() => setIsMenuOpen(false)}
-          >
-            🔍 Search
-          </Button>
-        </NavbarMenuItem>
-        <NavbarMenuItem>
-          <Button
-            as="a"
             href="/chat"
             variant={isActive('/chat') ? 'solid' : 'light'}
             color="primary"
@@ -138,7 +130,20 @@ const Navigation = () => {
             size="lg"
             onPress={() => setIsMenuOpen(false)}
           >
-            💬 Chat
+            � Chat
+          </Button>
+        </NavbarMenuItem>
+        <NavbarMenuItem>
+          <Button
+            as="a"
+            href="/search"
+            variant={isActive('/search') ? 'solid' : 'light'}
+            color="primary"
+            className="w-full justify-start"
+            size="lg"
+            onPress={() => setIsMenuOpen(false)}
+          >
+            � Search
           </Button>
         </NavbarMenuItem>
         <NavbarMenuItem className="mt-4">
@@ -161,7 +166,7 @@ const AppContent = () => {
         <Routes>
           <Route path="/" element={
             <ProtectedRoute>
-              <SearchPage />
+              <ChatPage />
             </ProtectedRoute>
           } />
           <Route path="/search" element={

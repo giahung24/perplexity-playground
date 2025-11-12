@@ -239,7 +239,7 @@ function ChatPage() {
   return (
     <div className="w-full max-w-6xl mx-auto h-[calc(100vh-100px)] sm:h-[calc(100vh-140px)] flex flex-col">
       <div className="text-center mb-3 sm:mb-6">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-2 sm:mb-4">RAG Chat</h1>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-2 sm:mb-4">Chat</h1>
       </div>
       
       <Card className="flex-1 shadow-md flex flex-col h-full">
