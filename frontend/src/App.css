@@ -20,6 +20,41 @@ input, textarea, button {
   font-family: inherit;
 }
 
+/* Mobile-friendly improvements */
+@media (max-width: 640px) {
+  /* Prevent zoom on inputs on iOS Safari */
+  input[type="text"], 
+  input[type="password"], 
+  textarea, 
+  select {
+    font-size: 16px;
+  }
+  
+  /* Better touch targets */
+  button, 
+  [role="button"], 
+  .cursor-pointer {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Prevent horizontal scroll */
+  body, html {
+    overflow-x: hidden;
+  }
+  
+  /* Better spacing for mobile */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* Better mobile scrolling */
+.overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
+}
+
 /* Citation link styles */
 .citation-content .citation-link {
   color: #3b82f6;
@@ -51,4 +86,40 @@ input, textarea, button {
   background-color: rgba(59, 130, 246, 0.3);
   border-color: rgba(59, 130, 246, 0.5);
   color: #93c5fd;
+}
+
+/* Mobile-specific improvements for text content */
+@media (max-width: 640px) {
+  .prose {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  
+  .prose h1 {
+    font-size: 1.5rem;
+  }
+  
+  .prose h2 {
+    font-size: 1.25rem;
+  }
+  
+  .prose h3 {
+    font-size: 1.125rem;
+  }
+  
+  /* Better handling of long URLs and text */
+  .break-all {
+    word-break: break-all;
+  }
+  
+  .break-words {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+}
+
+/* Improve mobile navigation menu */
+.navbar-menu {
+  max-height: calc(100vh - 64px);
+  overflow-y: auto;
 }

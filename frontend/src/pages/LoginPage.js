@@ -39,11 +39,11 @@ function LoginPage() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <Card className="shadow-lg">
-          <CardHeader className="flex flex-col gap-3 text-center">
-            <h1 className="text-2xl font-bold text-foreground">RAG Application</h1>
-            <p className="text-default-500">Please enter the access password</p>
+          <CardHeader className="flex flex-col gap-2 sm:gap-3 text-center p-4 sm:p-6">
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">RAG Application</h1>
+            <p className="text-sm sm:text-base text-default-500">Please enter the access password</p>
           </CardHeader>
-          <CardBody>
+          <CardBody className="p-4 sm:p-6">
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <Input
                 type="password"
@@ -56,6 +56,7 @@ function LoginPage() {
                 errorMessage={error}
                 disabled={isLoading}
                 autoFocus
+                size="lg"
               />
               <Spacer y={2} />
               <Button

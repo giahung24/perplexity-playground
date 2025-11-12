@@ -237,41 +237,41 @@ function ChatPage() {
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto h-[calc(100vh-140px)] flex flex-col">
-      <div className="text-center mb-6">
-        <h1 className="text-4xl font-bold text-foreground mb-4">RAG Chat</h1>
+    <div className="w-full max-w-6xl mx-auto h-[calc(100vh-100px)] sm:h-[calc(100vh-140px)] flex flex-col">
+      <div className="text-center mb-3 sm:mb-6">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-2 sm:mb-4">RAG Chat</h1>
       </div>
       
       <Card className="flex-1 shadow-md flex flex-col h-full">
-        <CardBody className="flex-1 overflow-y-auto p-4 space-y-4">
+        <CardBody className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4">
           {messages.map((message, index) => {
             const { thinking, content } = parseContentWithThinking(message.content);
             
             return (
               <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[70%] ${message.role === 'user' 
+                <div className={`max-w-[85%] sm:max-w-[70%] ${message.role === 'user' 
                   ? 'bg-primary text-primary-foreground' 
                   : 'bg-default-100'
-                } rounded-2xl p-4 space-y-3`}>
+                } rounded-2xl p-3 sm:p-4 space-y-2 sm:space-y-3`}>
                   
                   {message.model && message.role === 'assistant' && (
-                    <Chip size="sm" variant="flat" color="secondary" className="mb-2">
+                    <Chip size="sm" variant="flat" color="secondary" className="mb-1 sm:mb-2">
                       {availableModels.find(m => m.id === message.model)?.name || message.model}
                     </Chip>
                   )}
                   
                   {thinking.length > 0 && message.role === 'assistant' && thinking.map((thinkText, thinkIndex) => (
                     <details key={`think-${thinkIndex}`} className="bg-default-50 rounded-lg border border-divider">
-                      <summary className="cursor-pointer p-3 text-sm text-default-500 hover:bg-default-100 rounded-lg select-none">
+                      <summary className="cursor-pointer p-2 sm:p-3 text-xs sm:text-sm text-default-500 hover:bg-default-100 rounded-lg select-none">
                         💭 Thinking process
                       </summary>
-                      <div className="p-3 border-t border-divider text-xs text-default-400 leading-relaxed italic">
+                      <div className="p-2 sm:p-3 border-t border-divider text-xs text-default-400 leading-relaxed italic">
                         <ReactMarkdown>{thinkText}</ReactMarkdown>
                       </div>
                     </details>
                   ))}
                   
-                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                  <div className="prose prose-sm dark:prose-invert max-w-none text-sm sm:text-base">
                     {message.role === 'assistant' ? 
                       renderContentWithCitations(content, message.sources, message.parsedCitations) :
                       <ReactMarkdown>{content}</ReactMarkdown>
@@ -304,8 +304,8 @@ function ChatPage() {
           <div ref={messagesEndRef} />
         </CardBody>
         
-        <div className="p-4 border-t border-divider">
-          <div className="mb-4">
+        <div className="p-3 sm:p-4 border-t border-divider">
+          <div className="mb-3 sm:mb-4">
             <Select
               label="Model"
               placeholder="Select a model"
@@ -313,7 +313,7 @@ function ChatPage() {
               onSelectionChange={(keys) => setSelectedModel(Array.from(keys)[0])}
               disabled={loading}
               size="sm"
-              className="max-w-xs"
+              className="max-w-full sm:max-w-xs"
             >
               {availableModels.map(model => (
                 <SelectItem key={model.id} value={model.id}>
@@ -323,7 +323,7 @@ function ChatPage() {
             </Select>
           </div>
           
-          <form onSubmit={handleSendMessage} className="flex gap-4">
+          <form onSubmit={handleSendMessage} className="flex flex-col sm:flex-row gap-2 sm:gap-4">
             <Input
               type="text"
               placeholder="Ask me anything..."
@@ -339,7 +339,7 @@ function ChatPage() {
               disabled={loading || !inputMessage.trim()}
               color="primary"
               size="lg"
-              className="px-8"
+              className="px-6 sm:px-8 w-full sm:w-auto"
             >
               {loading ? <Spinner size="sm" color="white" /> : 'Send'}
             </Button>

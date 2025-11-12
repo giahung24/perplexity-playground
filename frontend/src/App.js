@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import {
   Navbar,
   NavbarBrand,
   NavbarContent,
   NavbarItem,
+  NavbarMenuToggle,
+  NavbarMenu,
+  NavbarMenuItem,
   Button,
   Switch,
   Dropdown,
@@ -40,14 +43,26 @@ const ThemeToggle = () => {
 const Navigation = () => {
   const location = useLocation();
   const { logout } = useAuth();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   
   const isActive = (path) => location.pathname === path;
   
   return (
-    <Navbar isBordered className="bg-background/60 backdrop-blur-md">
-      <NavbarBrand>
-        <p className="font-bold text-xl text-primary">RAG Application</p>
-      </NavbarBrand>
+    <Navbar 
+      onMenuOpenChange={setIsMenuOpen}
+      isMenuOpen={isMenuOpen}
+      isBordered 
+      className="bg-background/60 backdrop-blur-md"
+    >
+      <NavbarContent>
+        <NavbarMenuToggle
+          aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+          className="sm:hidden"
+        />
+        <NavbarBrand>
+          <p className="font-bold text-lg sm:text-xl text-primary">RAG App</p>
+        </NavbarBrand>
+      </NavbarContent>
       
       <NavbarContent className="hidden sm:flex gap-4" justify="center">
         <NavbarItem>
@@ -56,6 +71,7 @@ const Navigation = () => {
             href="/search"
             variant={isActive('/search') || isActive('/') ? 'solid' : 'light'}
             color="primary"
+            size="sm"
           >
             Search
           </Button>
@@ -66,6 +82,7 @@ const Navigation = () => {
             href="/chat"
             variant={isActive('/chat') ? 'solid' : 'light'}
             color="primary"
+            size="sm"
           >
             Chat
           </Button>
@@ -73,7 +90,7 @@ const Navigation = () => {
       </NavbarContent>
       
       <NavbarContent justify="end">
-        <NavbarItem>
+        <NavbarItem className="hidden sm:flex">
           <ThemeToggle />
         </NavbarItem>
         <NavbarItem>
@@ -96,6 +113,40 @@ const Navigation = () => {
           </Dropdown>
         </NavbarItem>
       </NavbarContent>
+      
+      <NavbarMenu>
+        <NavbarMenuItem>
+          <Button
+            as="a"
+            href="/search"
+            variant={isActive('/search') || isActive('/') ? 'solid' : 'light'}
+            color="primary"
+            className="w-full justify-start"
+            size="lg"
+            onPress={() => setIsMenuOpen(false)}
+          >
+            🔍 Search
+          </Button>
+        </NavbarMenuItem>
+        <NavbarMenuItem>
+          <Button
+            as="a"
+            href="/chat"
+            variant={isActive('/chat') ? 'solid' : 'light'}
+            color="primary"
+            className="w-full justify-start"
+            size="lg"
+            onPress={() => setIsMenuOpen(false)}
+          >
+            💬 Chat
+          </Button>
+        </NavbarMenuItem>
+        <NavbarMenuItem className="mt-4">
+          <div className="w-full">
+            <ThemeToggle />
+          </div>
+        </NavbarMenuItem>
+      </NavbarMenu>
     </Navbar>
   );
 };
@@ -106,7 +157,7 @@ const AppContent = () => {
   return (
     <div className="min-h-screen bg-background">
       {isAuthenticated && <Navigation />}
-      <main className={`container mx-auto px-6 ${isAuthenticated ? 'py-8' : 'py-0'} max-w-6xl`}>
+      <main className={`container mx-auto px-4 sm:px-6 ${isAuthenticated ? 'py-4 sm:py-8' : 'py-0'} max-w-7xl`}>
         <Routes>
           <Route path="/" element={
             <ProtectedRoute>
