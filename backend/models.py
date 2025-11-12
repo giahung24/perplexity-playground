@@ -29,7 +29,7 @@ class SearchResponse(BaseModel):
 
 
 class ChatMessage(BaseModel):
-    role: str = Field(..., description="Message role", example="user", regex="^(user|assistant|system)$")
+    role: str = Field(..., description="Message role", example="user", pattern="^(user|assistant|system)$")
     content: str = Field(..., description="Message content", example="What are the latest trends in AI?")
 
 
@@ -37,7 +37,7 @@ class ChatRequest(BaseModel):
     messages: List[ChatMessage] = Field(..., description="Conversation history")
     query: str = Field(..., description="Current user query", example="Tell me about machine learning")
     model: Optional[ModelType] = Field(ModelType.sonar, description="Perplexity model to use")
-    stream: Optional[bool] = Field(False, description="Enable streaming response")
+    stream: Optional[bool] = Field(True, description="Enable streaming response")
     web_search_options: Optional[Dict] = Field(None, description="Additional web search configuration")
 
 

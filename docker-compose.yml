@@ -5,6 +5,8 @@ services:
       - "${BACKEND_PORT:-8000}:8000"
     environment:
       - PERPLEXITY_API_KEY=${PERPLEXITY_API_KEY}
+      - DEPLOY_HOST=${DEPLOY_HOST}
+      - FRONTEND_PORT=${FRONTEND_PORT}
     networks:
       - rag_network
     volumes:

@@ -76,19 +76,8 @@ class PerplexityService:
         try:
             client = Perplexity(api_key=self.api_key)
             
-            # Build conversation history
-            conversation = []
-            for msg in messages:
-                conversation.append({
-                    "role": msg.role,
-                    "content": msg.content
-                })
-            
-            # Add current query
-            conversation.append({
-                "role": "user",
-                "content": query
-            })
+            # Build conversation history with proper role alternation
+            conversation = self._build_valid_conversation(messages, query)
             
             # Prepare completion parameters
             completion_params = {
@@ -120,6 +109,103 @@ class PerplexityService:
         except Exception as e:
             logger.error(f"Error calling Perplexity Chat API: {str(e)}")
             raise HTTPException(status_code=500, detail="Chat service unavailable")
+    
+    def _build_valid_conversation(self, messages: List[ChatMessage], query: str) -> List[dict]:
+        """
+        Build a valid conversation that follows Perplexity API requirements:
+        - System messages (optional) come first
+        - After system messages, user and assistant messages must alternate
+        - Conversation should end with a user message
+        
+        Args:
+            messages: List of chat messages for context
+            query: Current user query
+            
+        Returns:
+            List of properly formatted messages
+        """
+        conversation = []
+        system_messages = []
+        user_assistant_messages = []
+        
+        # Separate system messages from user/assistant messages
+        for msg in messages:
+            if msg.role == "system":
+                system_messages.append({
+                    "role": msg.role,
+                    "content": msg.content
+                })
+            else:
+                user_assistant_messages.append({
+                    "role": msg.role,
+                    "content": msg.content
+                })
+        
+        # Add system messages first
+        conversation.extend(system_messages)
+        
+        # Ensure proper alternation for user/assistant messages
+        if user_assistant_messages:
+            # Validate and fix alternation
+            fixed_messages = self._fix_message_alternation(user_assistant_messages)
+            conversation.extend(fixed_messages)
+        
+        # Add the current query as a user message
+        # Make sure the last message is from user for proper alternation
+        if conversation and conversation[-1]["role"] == "user":
+            # If the last message is already from user, we might need an assistant response first
+            # For now, we'll replace it with the new query
+            conversation[-1] = {
+                "role": "user",
+                "content": query
+            }
+        else:
+            # Safe to add user message
+            conversation.append({
+                "role": "user",
+                "content": query
+            })
+        
+        return conversation
+    
+    def _fix_message_alternation(self, messages: List[dict]) -> List[dict]:
+        """
+        Fix message alternation to ensure user and assistant messages alternate properly
+        
+        Args:
+            messages: List of user/assistant messages
+            
+        Returns:
+            List of properly alternating messages
+        """
+        if not messages:
+            return []
+        
+        fixed_messages = []
+        last_role = None
+        
+        for msg in messages:
+            current_role = msg["role"]
+            
+            # Skip consecutive messages from the same role (except the first message)
+            if last_role is None or last_role != current_role:
+                fixed_messages.append(msg)
+                last_role = current_role
+            else:
+                # If we have consecutive messages from the same role, merge them or skip
+                if fixed_messages:
+                    # Merge with the previous message of the same role
+                    fixed_messages[-1]["content"] += f"\n\n{msg['content']}"
+        
+        # Ensure we start with a user message if we have any messages
+        if fixed_messages and fixed_messages[0]["role"] == "assistant":
+            # Insert a default user message at the beginning
+            fixed_messages.insert(0, {
+                "role": "user",
+                "content": "Hello, I'd like to continue our conversation."
+            })
+        
+        return fixed_messages
     
     def _handle_streaming_response(self, client, completion_params) -> ChatResponse:
         """
